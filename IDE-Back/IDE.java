@@ -37,6 +37,7 @@ class CLI {
                     run_JavaFile(Jfile);
                     break;
                 case 4:
+                    reset_JavaFile();
                     Jfile = null;
                     break;
                 case 5:
@@ -82,7 +83,7 @@ class CLI {
         }
         try {
             //에러 메세지를 저장할 파일 생성
-            Jfile.ErrorFile = new File(file.path + ".err");
+            Jfile.ErrorFile = new File(file.path + ".error");
             //만약 에러 메세지 파일이 없으면 생성한다.
             if(!Jfile.ErrorFile.exists()){
                 Jfile.ErrorFile.createNewFile();
@@ -100,7 +101,7 @@ class CLI {
                 //정상적으로 컴파일되면 에러 파일을 지운다.
                 Jfile.DeleteErrFile();
             } else {
-                System.out.println("compile failed - " + Jfile.ErrorFile.getName());
+                System.out.println("compile error occured - " + Jfile.ErrorFile.getName());
             }
 
         } catch (Exception e) {
@@ -118,7 +119,7 @@ class CLI {
         try {
             File javaFile = new File(file.path);
             File parent_Dir = javaFile.getParentFile();
-            String java_class = javaFile.getName().replace(".java", "");
+            String java_class = javaFile.getName().replace(".java","");
 
             ProcessBuilder run_class = new ProcessBuilder("java", java_class);
             run_class.directory(parent_Dir);
@@ -134,14 +135,31 @@ class CLI {
     void java_FileOutput(Process process) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
         {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+            String s;
+            while ((s = reader.readLine()) != null) {
+                System.out.println(s);
             }
         }
     }
+    void reset_JavaFile(){
+        if (Jfile == null) {
+            System.out.println("no file exist");
+            return;
+        }
+        String java_FilePath = Jfile.path;
+        String class_FilePath = java_FilePath.replace(".java",".class");
+        File class_File = new File(class_FilePath);
+        if(class_File.exists()){
+            class_File.delete();
+            System.out.println("reset complete");
+        }
+        else{
+            System.out.println("reset fail");
+        }
 
-}
+        }
+    }
+
 
 class JavaFile {
     String path;
