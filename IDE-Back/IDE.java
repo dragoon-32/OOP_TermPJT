@@ -1,3 +1,6 @@
+//Java Term Project - 1
+//팀원: 202211458 백동성
+//      202211422 김수현
 import java.io.*;
 import java.util.*;
 
@@ -223,4 +226,5 @@ class JavaFile {
         }
          return count;
     }
+
 }
