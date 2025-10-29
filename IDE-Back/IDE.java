@@ -215,7 +215,7 @@ class JavaFile {
             System.out.println(e);
         }
     }
-    public int count_err() throws IOException { //에러 개수세는 함수 추가 + JFile 을 null로 초기화 하는거 reset_JavaFile로 옮겼음
+    public int count_err() throws IOException {
         int count =0;
         BufferedReader bufReader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorFile), "MS949"));
         String s;
@@ -224,7 +224,7 @@ class JavaFile {
                 count++;
             }
         }
-         return count;
+        return count;
     }
 
 }
