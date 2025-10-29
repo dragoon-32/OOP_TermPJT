@@ -38,7 +38,6 @@ class CLI {
                     break;
                 case 4:
                     reset_JavaFile();
-                    Jfile = null;
                     break;
                 case 5:
                     Jfile.PrintErrorFile();
@@ -65,6 +64,7 @@ class CLI {
         System.out.println("4. Reset");
         System.out.println("5. Check Error File");
         System.out.println("6. Exit");
+        System.out.println("************************");
         System.out.print(">");
     }
 
@@ -101,7 +101,8 @@ class CLI {
                 //정상적으로 컴파일되면 에러 파일을 지운다.
                 Jfile.DeleteErrFile();
             } else {
-                System.out.println("compile error occured - " + Jfile.ErrorFile.getName());
+
+                System.out.println(file.count_err() +" compile error occured - " + Jfile.ErrorFile.getName());
             }
 
         } catch (Exception e) {
@@ -151,14 +152,15 @@ class CLI {
         File class_File = new File(class_FilePath);
         if(class_File.exists()){
             class_File.delete();
+            Jfile = null;
             System.out.println("reset complete");
         }
         else{
             System.out.println("reset fail");
         }
 
-        }
     }
+}
 
 
 class JavaFile {
@@ -178,6 +180,9 @@ class JavaFile {
             return;
         }
         try{
+            System.out.println("Type Error Filename: "+ ErrorFile.getName());
+            System.out.println();
+            System.out.println();
             BufferedReader bufReader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorFile), "MS949"));
             String s;
             while((s = bufReader.readLine()) != null){
@@ -206,5 +211,16 @@ class JavaFile {
         catch(Exception e){
             System.out.println(e);
         }
+    }
+    public int count_err() throws IOException { //에러 개수세는 함수 추가 + JFile 을 null로 초기화 하는거 reset_JavaFile로 옮겼음
+        int count =0;
+        BufferedReader bufReader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorFile), "MS949"));
+        String s;
+        while((s = bufReader.readLine()) != null){
+            if(s.contains("error:")){
+                count++;
+            }
+        }
+         return count;
     }
 }
