@@ -1,230 +1,255 @@
-//Java Term Project - 1
-//팀원: 202211458 백동성
-//      202211422 김수현
 import java.io.*;
-import java.util.*;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
 
 //main 객체
 public class IDE {
     public static void main(String args[]) {
-        new CLI();
+        new UI();
     }
 }
 
-//GUI 개발할 때를 대비하여 CLI 부분을 따로 떼놓음.
-//기능을 추가하려면 loop()의 switch문에서 동작 코드를, print_menu()에서 기능및 번호 설명 코드를 추가할것
-class CLI {
+class UI extends JFrame{
+    //Window Components
+    private JButton B_open, B_save, B_compile, B_saveErr, B_delete, B_clear;
+    private JTextField T_open, T_save;
+    private JTextArea T_edit, T_result;
+    //Java Text File
     JavaFile Jfile;
 
-    //Constructor
-    CLI() {
-        loop();
+    //initializer
+    public UI(){
+        setTitle("IDE2.0");
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        Container c = getContentPane();
+        setContainer(c);
+        
+        setSize(1050, 900);
+        setVisible(true);
     }
 
-    //CLI loop
-    void loop() {
-        Scanner scan = new Scanner(System.in);
-        while (true) {
-            print_menu();
-            int action = scan.nextInt();
-            //기능을 추가하고 싶으면 여기에 case를 추가해주세요
-            switch (action) {
-                case 1:
-                    Scanner path = new Scanner(System.in);
-                    Jfile = upload_file(path);
-                    break;
-                case 2:
-                    compile_JavaFile(Jfile);
-                    break;
-                case 3:
-                    run_JavaFile(Jfile);
-                    break;
-                case 4:
-                    reset_JavaFile();
-                    break;
-                case 5:
-                    Jfile.PrintErrorFile();
-                    break;
-                case 6:
-                    System.out.println("GoodBye");
-                    scan.close();
-                    return;
-                default:
-                    System.out.println("We Do Not have your option.");
-                    System.out.println("Please Try Again");
-                    break;
+    //Setting Graphic Layout
+    void setContainer(Container c){
+        c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
+        
+        JPanel open = new JPanel();
+        open.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        T_open = new JTextField(30);
+        T_open.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
+        B_open = new JButton("Open");
+        open.add(T_open);
+        open.add(B_open);
+        //ADD Event Listener at HERE
+        B_open.addActionListener(new OpenEvent());
+        c.add(open);
+
+        JPanel save = new JPanel();
+        save.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
+        T_save = new JTextField(30);
+        T_save.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
+        B_save = new JButton("Save");
+        save.add(T_save);
+        save.add(B_save);
+        //ADD Event Listener at HERE
+        B_save.addActionListener(new SaveEvent());
+        c.add(save);
+
+        T_edit = new JTextArea(45, 30);     //Main Editing Area
+        T_edit.setMargin(new Insets(0, 10, 0, 0));
+        T_edit.setFont(new Font("Consolas", Font.PLAIN, 15));
+        //ADD Event Listener at HERE
+        c.add(new JScrollPane(T_edit));
+
+        JPanel Buttons = new JPanel();
+        Buttons.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 30));
+        B_compile = new JButton("Compile");
+        B_saveErr = new JButton("Save Errors");
+        B_delete = new JButton("Delete");
+        B_clear = new JButton("Clear");
+        Buttons.add(B_compile);
+        Buttons.add(B_saveErr);
+        Buttons.add(B_delete);
+        Buttons.add(B_clear);
+        //ADD Event Listener at HERE
+        B_compile.addActionListener(new CompileEvent());
+        B_saveErr.addActionListener(new ErrSaveEvent());
+        B_delete.addActionListener(new DeleteEvent());
+        B_clear.addActionListener(new ClearEvent());
+        c.add(Buttons);
+
+        T_result = new JTextArea(25, 30);   //TextArea For printing Results
+        T_result.setMargin(new Insets(0, 10, 0, 0));
+        //ADD Event Listener at HERE
+        c.add(new JScrollPane(T_result));
+    }
+
+    //Function for Printing Files at Textarea
+    void print_at_textarea(File file, JTextArea t){
+        String s;
+        try{
+            BufferedReader read = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
+            while((s = read.readLine()) != null){
+                t.append(s + "\n");
+            }
+            read.close();
+        }
+        catch(Exception e){
+            T_result.append("ERROR!!! There was an Error at Reading From File: " + file);
+        }
+    }
+    //Function for Saving text From TextArea
+    void save_at_file(File file, JTextArea t){
+        try{
+            BufferedWriter write = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
+            for (String line : t.getText().split("\\n")){
+                write.write(line + "\n");
+            }
+            write.flush();
+            write.close();
+        }
+        catch(Exception e){
+            T_result.append("ERROR!!! There was an Error at Writing File: " + file);
+        }
+    }
+    void clear(){ //전부 초기화하는 함수
+        T_edit.setText("");
+        T_result.setText("");
+        T_save.setText("");
+        T_open.setText("");
+        Jfile = null;
+    }
+
+    //Event Listeners
+    class OpenEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            String s = T_open.getText();
+            T_open.setText("");
+            Jfile = new JavaFile(s);
+            if(!Jfile.exists()){
+                T_result.append("ERROR!!! There Is No Such File!");
+                Jfile = null;
+                return;
+            }
+            T_edit.setText("");
+            print_at_textarea(Jfile, T_edit);
+        }
+    }
+    class SaveEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            String s = T_save.getText();
+
+            //Case When Input Value is Empty
+            if(s.equals("")){
+                if(Jfile == null)
+                    T_result.append("ERROR!!! Please Write Your File Name!!");
+                else{
+                    save_at_file(Jfile, T_edit);
+                }
+            }
+            //Case When Input Value Exists
+            else{
+                //case When JavaFile is Not yet Opened
+                if(Jfile == null){
+                    File newFile = new File(s);
+                    if(newFile.exists()){
+                        T_result.append("ERROR!!! The File Named " + newFile + "is Already Exist!!!");
+                        return;
+                    }
+                    else{
+                        try{
+                            newFile.createNewFile();
+                            save_at_file(newFile, T_edit);
+                        }
+                        catch(Exception ioE){
+                            T_result.append("ERROR!!! There Is Error At saving JavaFile: " + newFile);
+                        }
+                        Jfile = new JavaFile(s);
+                    }
+                }
+                //Case When JavaFile is Opened
+                else{
+                    //Case When Input Value is JavaFile's path
+                    if(s.equals(Jfile.getPath())){
+                        save_at_file(Jfile, T_edit);
+                    }
+                    else{
+                        File newFile = new File(s);
+                        try{
+                            newFile.createNewFile();
+                            save_at_file(newFile, T_edit);
+                        }
+                        catch(Exception ioE){
+                            T_result.append("ERROR!!! There Is Error At saving JavaFile: " + newFile);
+                        }
+                        Jfile = new JavaFile(s);
+                    }
+                }
             }
         }
     }
-
-    void print_menu() {
-        //기능을 추가하고 싶으면 여기에 기능 설명을 적어주세요.
-        System.out.println("************************");
-        System.out.println("JAVA TERM PROJECT");
-        System.out.println("1. Java File Upload");
-        System.out.println("2. Compile");
-        System.out.println("3. Run");
-        System.out.println("4. Reset");
-        System.out.println("5. Check Error File");
-        System.out.println("6. Exit");
-        System.out.println("************************");
-        System.out.print(">");
-    }
-
-    JavaFile upload_file(Scanner scan) {
-        String path;
-        System.out.print("Java File Path:");
-        path = scan.nextLine();
-        return new JavaFile(path);
-    }
-
-    void compile_JavaFile(JavaFile file) {
-        if(file == null){
-            System.out.println("We Do Not Have ANY Java File!");
-            System.out.println("please upload your Java file");
-            return;
-        }
-        try {
-            //에러 메세지를 저장할 파일 생성
-            Jfile.ErrorFile = new File(file.path + ".error");
-            //만약 에러 메세지 파일이 없으면 생성한다.
-            if(!Jfile.ErrorFile.exists()){
-                Jfile.ErrorFile.createNewFile();
-            }
-
-            ProcessBuilder compile = new ProcessBuilder("javac", file.path); //.class
-            compile.redirectError(Jfile.ErrorFile);
-
-            Process compileProcess = compile.start();
-            java_FileOutput(compileProcess);
-            int exit_code = compileProcess.waitFor();
-
-            if (exit_code == 0) {
-                System.out.println("“compiled successfully…");
-                //정상적으로 컴파일되면 에러 파일을 지운다.
-                Jfile.DeleteErrFile();
-            } else {
-
-                System.out.println(file.count_err() +" compile error occured - " + Jfile.ErrorFile.getName());
-            }
-
-        } catch (Exception e) {
-            System.out.println("UnExpected Error Occured while compiling your JavaFile!!");
-            System.exit(-1);
+    class CompileEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            Jfile.compile(T_result);
         }
     }
-
-    void run_JavaFile(JavaFile file) {
-        if(file == null){
-            System.out.println("We Do Not Have ANY Java File!");
-            System.out.println("please upload your Java file");
-            return;
-        }
-        try {
-            File javaFile = new File(file.path);
-            File parent_Dir = javaFile.getParentFile();
-            String java_class = javaFile.getName().replace(".java","");
-
-            ProcessBuilder run_class = new ProcessBuilder("java", java_class);
-            run_class.directory(parent_Dir);
-
-            Process run_Process = run_class.start();
-            java_FileOutput(run_Process);
-
-        } catch (Exception e) {
-            System.out.println("run time error");
+    class ErrSaveEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            Jfile.saveErr(T_result);
         }
     }
-
-    void java_FileOutput(Process process) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-        {
-            String s;
-            while ((s = reader.readLine()) != null) {
-                System.out.println(s);
-            }
-        }
-    }
-    void reset_JavaFile(){
-        if (Jfile == null) {
-            System.out.println("no file exist");
-            return;
-        }
-        String java_FilePath = Jfile.path;
-        String class_FilePath = java_FilePath.replace(".java",".class");
-        File class_File = new File(class_FilePath);
-        if(class_File.exists()){
-            class_File.delete();
+    class DeleteEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            Jfile.delete();
             Jfile = null;
-            System.out.println("reset complete");
         }
-        else{
-            System.out.println("reset fail");
+    }
+    class ClearEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            clear();
         }
-
     }
 }
 
-
-class JavaFile {
+class JavaFile extends File{
     String path;
     File ErrorFile;
 
     JavaFile(String S) {
+        super(S);
         path = S;
+        ErrorFile = new File(S + ".error");
     }
-    public void PrintErrorFile(){
-        if(ErrorFile == null){
-            System.out.println("There is no ErrorFile");
-            return;
-        }
-        if(!ErrorFile.exists()){
-            System.out.println("There is no ErrorFile");
-            return;
-        }
+    public void Delete(){
+        delete();
+    }
+    public void compile(JTextArea result){
         try{
-            System.out.println("Type Error Filename: "+ ErrorFile.getName());
-            System.out.println();
-            System.out.println();
-            BufferedReader bufReader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorFile), "MS949"));
-            String s;
-            while((s = bufReader.readLine()) != null){
-                System.out.println(s);
-            }
-            bufReader.close();
-        }
-        catch(Exception e){
-            System.out.println("Error At Printing ErrorFile");
-            System.out.println(e.getMessage());
-            return;
-        }
-    }
-    public void DeleteErrFile(){
-        if(ErrorFile == null){
-            System.out.println("There is no ErrorFile");
-            return;
-        }
-        if(!ErrorFile.exists()){
-            System.out.println("There is no ErrorFile");
-            return;
-        }
-        try{
-            ErrorFile.delete();
-        }
-        catch(Exception e){
-            System.out.println(e);
-        }
-    }
-    public int count_err() throws IOException {
-        int count =0;
-        BufferedReader bufReader = new BufferedReader(new InputStreamReader(new FileInputStream(ErrorFile), "MS949"));
-        String s;
-        while((s = bufReader.readLine()) != null){
-            if(s.contains("error:")){
-                count++;
-            }
-        }
-        return count;
-    }
+            ProcessBuilder compile = new ProcessBuilder("javac", path);
+            Process compileProcess = compile.start();
+            int exit_code = compileProcess.waitFor();
 
+            if (exit_code == 0) {
+                    result.setText("");
+                    result.append("“compiled successfully…\n");
+                } else {
+                    result.setText("");
+                    result.read(new InputStreamReader(compileProcess.getErrorStream(), "MS949"), null);
+                }
+        }
+        catch(Exception e){
+            result.append("ERROR!!! UNKNOWN ERROR AT Compiling.\n");
+        }
+    }
+    public void saveErr(JTextArea result){
+        try{
+            if(!ErrorFile.exists()){
+                ErrorFile.createNewFile();
+            }
+            result.write(new FileWriter(ErrorFile));
+        }
+        catch(Exception e){
+            result.append("ERROR!!! Error at Saving Error Result\n");
+        }
+    }
 }
