@@ -24,7 +24,7 @@ class UI extends JFrame{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         Container c = getContentPane();
         setContainer(c);
-        
+
         setSize(1050, 900);
         setVisible(true);
     }
@@ -32,7 +32,7 @@ class UI extends JFrame{
     //Setting Graphic Layout
     void setContainer(Container c){
         c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
-        
+
         JPanel open = new JPanel();
         open.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
         T_open = new JTextField(30);
@@ -127,6 +127,7 @@ class UI extends JFrame{
             T_open.setText("");
             Jfile = new JavaFile(s);
             if(!Jfile.exists()){
+                T_result.setText("");
                 T_result.append("ERROR!!! There Is No Such File!");
                 Jfile = null;
                 return;
@@ -141,8 +142,10 @@ class UI extends JFrame{
 
             //Case When Input Value is Empty
             if(s.equals("")){
-                if(Jfile == null)
+                if(Jfile == null) {
+                    T_result.setText("");
                     T_result.append("ERROR!!! Please Write Your File Name!!");
+                }
                 else{
                     save_at_file(Jfile, T_edit);
                 }
@@ -153,6 +156,7 @@ class UI extends JFrame{
                 if(Jfile == null){
                     File newFile = new File(s);
                     if(newFile.exists()){
+                        T_result.setText("");
                         T_result.append("ERROR!!! The File Named " + newFile + "is Already Exist!!!");
                         return;
                     }
@@ -162,6 +166,7 @@ class UI extends JFrame{
                             save_at_file(newFile, T_edit);
                         }
                         catch(Exception ioE){
+                            T_result.setText("");
                             T_result.append("ERROR!!! There Is Error At saving JavaFile: " + newFile);
                         }
                         Jfile = new JavaFile(s);
@@ -180,6 +185,7 @@ class UI extends JFrame{
                             save_at_file(newFile, T_edit);
                         }
                         catch(Exception ioE){
+                            T_result.setText("");
                             T_result.append("ERROR!!! There Is Error At saving JavaFile: " + newFile);
                         }
                         Jfile = new JavaFile(s);
@@ -188,19 +194,36 @@ class UI extends JFrame{
             }
         }
     }
+
     class CompileEvent implements ActionListener{
         public void actionPerformed(ActionEvent e){
+            if(Jfile == null){
+                T_result.setText("");
+                T_result.append("ERROR!!! FILE NOT FOUND!!!");
+                return ;
+            }
             Jfile.compile(T_result);
         }
     }
+
     class ErrSaveEvent implements ActionListener{
         public void actionPerformed(ActionEvent e){
+            if(Jfile == null){
+                T_result.setText("");
+                T_result.append("ERROR!!! FILE NOT FOUND!!!");
+                return ;
+            }
             Jfile.saveErr(T_result);
         }
     }
     class DeleteEvent implements ActionListener{
         public void actionPerformed(ActionEvent e){
-            Jfile.delete();
+            if(Jfile == null){
+                    T_result.setText("");
+                    T_result.append("ERROR!!! FILE NOT FOUND!!!");
+                return ;
+            }
+            Jfile.delete(T_result);
             Jfile = null;
         }
     }
@@ -214,42 +237,66 @@ class UI extends JFrame{
 class JavaFile extends File{
     String path;
     File ErrorFile;
+    File JavaFile;
 
     JavaFile(String S) {
         super(S);
         path = S;
         ErrorFile = new File(S + ".error");
+        JavaFile = new File(S);
     }
-    public void Delete(){
-        delete();
-    }
-    public void compile(JTextArea result){
+
+    public boolean compile(JTextArea result){
         try{
             ProcessBuilder compile = new ProcessBuilder("javac", path);
             Process compileProcess = compile.start();
             int exit_code = compileProcess.waitFor();
 
             if (exit_code == 0) {
-                    result.setText("");
-                    result.append("“compiled successfully…\n");
-                } else {
-                    result.setText("");
-                    result.read(new InputStreamReader(compileProcess.getErrorStream(), "MS949"), null);
-                }
+                result.setText("");
+                result.append("“compiled successfully…\n");
+                return true;
+            } else {
+                result.setText("");
+                result.read(new InputStreamReader(compileProcess.getErrorStream(), "MS949"), null);
+                return false;
+            }
         }
         catch(Exception e){
+            result.setText("");
             result.append("ERROR!!! UNKNOWN ERROR AT Compiling.\n");
+            return false;
         }
     }
+
     public void saveErr(JTextArea result){
         try{
+            if(!compile(result)){
             if(!ErrorFile.exists()){
                 ErrorFile.createNewFile();
+                result.write(new FileWriter(ErrorFile));
+                }
             }
-            result.write(new FileWriter(ErrorFile));
+            //result.write(new FileWriter(ErrorFile));
         }
         catch(Exception e){
+            result.setText("");
             result.append("ERROR!!! Error at Saving Error Result\n");
+        }
+    }
+
+    void delete (JTextArea textArea) {//자바 파일을 삭제하는 함수
+        if (!JavaFile.exists()) {
+            textArea.setText("");
+            textArea.append("java file not existing");
+            return;
+        }
+        try {
+            JavaFile.delete();
+            textArea.setText("");
+            textArea.append("java file deleted");
+        } catch (Exception e) {
+            textArea.append(e.getMessage());
         }
     }
 }
