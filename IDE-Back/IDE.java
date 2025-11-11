@@ -12,7 +12,7 @@ public class IDE {
 
 class UI extends JFrame{
     //Window Components
-    private JButton B_open, B_save, B_compile, B_saveErr, B_delete, B_clear;
+    private JButton B_open, B_save, B_compile, B_saveErr, B_delete, B_clear, B_run;
     private JTextField T_open, T_save;
     private JTextArea T_edit, T_result;
     //Java Text File
@@ -64,15 +64,18 @@ class UI extends JFrame{
         JPanel Buttons = new JPanel();
         Buttons.setLayout(new FlowLayout(FlowLayout.CENTER, 30, 30));
         B_compile = new JButton("Compile");
+        B_run = new JButton("Run");
         B_saveErr = new JButton("Save Errors");
         B_delete = new JButton("Delete");
         B_clear = new JButton("Clear");
         Buttons.add(B_compile);
+        Buttons.add(B_run);
         Buttons.add(B_saveErr);
         Buttons.add(B_delete);
         Buttons.add(B_clear);
         //ADD Event Listener at HERE
         B_compile.addActionListener(new CompileEvent());
+        B_run.addActionListener(new RunEvent());
         B_saveErr.addActionListener(new ErrSaveEvent());
         B_delete.addActionListener(new DeleteEvent());
         B_clear.addActionListener(new ClearEvent());
@@ -232,6 +235,16 @@ class UI extends JFrame{
             clear();
         }
     }
+    class RunEvent implements ActionListener{
+        public void actionPerformed(ActionEvent e){
+            if(Jfile == null){
+                T_result.setText("");
+                T_result.append("ERROR!!! FILE NOT FOUND!!!");
+                return ;
+            }
+            Jfile.run(T_result);
+        }
+    }
 }
 
 class JavaFile extends File{
@@ -297,6 +310,24 @@ class JavaFile extends File{
             textArea.append("java file deleted");
         } catch (Exception e) {
             textArea.append(e.getMessage());
+        }
+    }
+
+    public void run(JTextArea result){
+        try{
+            String java_class = getName().replace(".java", "");
+            File Parent_Dir = getParentFile();
+            
+            ProcessBuilder run_class = new ProcessBuilder("java", java_class);
+            run_class.directory(Parent_Dir);
+            run_class.redirectErrorStream(true);
+            Process run_process = run_class.start();
+
+            result.setText("");
+            result.read(new InputStreamReader(run_process.getInputStream(), "MS949"), null);
+        }
+        catch(Exception e){
+            result.append("ERROR!!! Error at Running Javafile\n");
         }
     }
 }
