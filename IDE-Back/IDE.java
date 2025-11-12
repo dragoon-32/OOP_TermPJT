@@ -25,23 +25,17 @@ class UI extends JFrame{
         Container c = getContentPane();
         setContainer(c);
 
-        setSize(750, 800);
+        setSize(1050, 900);
         setVisible(true);
     }
 
-    public class EXAMPLE {
-        public static void main(String[] args) {
-
-            System.out.printf("Hello World!");
-        }
-    }
     //Setting Graphic Layout
     void setContainer(Container c){
         c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
 
         JPanel open = new JPanel();
         open.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        T_open = new JTextField(40);
+        T_open = new JTextField(30);
         T_open.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
         B_open = new JButton("Open");
         open.add(T_open);
@@ -52,7 +46,7 @@ class UI extends JFrame{
 
         JPanel save = new JPanel();
         save.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
-        T_save = new JTextField(40);
+        T_save = new JTextField(30);
         T_save.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
         B_save = new JButton("Save");
         save.add(T_save);
