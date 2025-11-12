@@ -25,17 +25,23 @@ class UI extends JFrame{
         Container c = getContentPane();
         setContainer(c);
 
-        setSize(1050, 900);
+        setSize(750, 800);
         setVisible(true);
     }
 
+    public class EXAMPLE {
+        public static void main(String[] args) {
+
+            System.out.printf("Hello World!");
+        }
+    }
     //Setting Graphic Layout
     void setContainer(Container c){
         c.setLayout(new BoxLayout(c, BoxLayout.Y_AXIS));
 
         JPanel open = new JPanel();
         open.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 0));
-        T_open = new JTextField(30);
+        T_open = new JTextField(40);
         T_open.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
         B_open = new JButton("Open");
         open.add(T_open);
@@ -46,7 +52,7 @@ class UI extends JFrame{
 
         JPanel save = new JPanel();
         save.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 20));
-        T_save = new JTextField(30);
+        T_save = new JTextField(40);
         T_save.setFont(new Font("Consolas", Font.PLAIN, 20));   //for TextField size
         B_save = new JButton("Save");
         save.add(T_save);
@@ -165,6 +171,8 @@ class UI extends JFrame{
                     }
                     else{
                         try{
+                            T_result.setText("");
+                            T_result.append("Saved File: " + newFile + "\n");
                             newFile.createNewFile();
                             save_at_file(newFile, T_edit);
                         }
@@ -222,8 +230,8 @@ class UI extends JFrame{
     class DeleteEvent implements ActionListener{
         public void actionPerformed(ActionEvent e){
             if(Jfile == null){
-                    T_result.setText("");
-                    T_result.append("ERROR!!! FILE NOT FOUND!!!");
+                T_result.setText("");
+                T_result.append("ERROR!!! FILE NOT FOUND!!!");
                 return ;
             }
             Jfile.delete(T_result);
@@ -285,12 +293,17 @@ class JavaFile extends File{
     public void saveErr(JTextArea result){
         try{
             if(!compile(result)){
-            if(!ErrorFile.exists()){
-                ErrorFile.createNewFile();
-                result.write(new FileWriter(ErrorFile));
+                if(!ErrorFile.exists()){
+                    ErrorFile.createNewFile();
+                    result.write(new FileWriter(ErrorFile));
                 }
+                else
+                    result.write(new FileWriter(ErrorFile));
             }
-            //result.write(new FileWriter(ErrorFile));
+            else {
+                result.setText("");
+                result.append("Not existing error !!");
+            }
         }
         catch(Exception e){
             result.setText("");
@@ -317,7 +330,7 @@ class JavaFile extends File{
         try{
             String java_class = getName().replace(".java", "");
             File Parent_Dir = getParentFile();
-            
+
             ProcessBuilder run_class = new ProcessBuilder("java", java_class);
             run_class.directory(Parent_Dir);
             run_class.redirectErrorStream(true);
