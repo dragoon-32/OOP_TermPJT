@@ -4,7 +4,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 
-public class IDE{
+public class IDE_Term3{
     public static void main(String[] args) {
         new UI();
     }
@@ -71,8 +71,9 @@ class UI extends JFrame{
         saveas.addActionListener(new SaveAsEvent());
         quit.addActionListener(new QuitEvent());
         compile.addActionListener(new CompileEvent());
+        compile.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK)); // CTRL+R 단축키 함수
         Run.addActionListener(new RunEvent());
-        
+
 
         file.add(open);
         file.add(close);
@@ -82,7 +83,6 @@ class UI extends JFrame{
 
         run.add(compile);
         run.add(Run);
-
 
         MenuBar.add(file);
         MenuBar.add(run);
@@ -154,9 +154,20 @@ class UI extends JFrame{
             JAVAFile current = (JAVAFile)scroll.getViewport().getView();
 
             current.compile(T_result);
+            current.run(T_result);
         }
     }
+    class CompilekeyEvent extends KeyAdapter { // key Listener 함수
+        public void keyPressed(KeyEvent e){
+            JScrollPane scroll = (JScrollPane)T_edit.getSelectedComponent();
+            JAVAFile current = (JAVAFile)scroll.getViewport().getView();
 
+            if(e.isControlDown() && e.getKeyCode() == KeyEvent.VK_R){
+                current.compile(T_result);
+            }
+        }
+
+    }
     class RunEvent implements ActionListener{
         public void actionPerformed(ActionEvent e){
             JScrollPane scroll = (JScrollPane)T_edit.getSelectedComponent();
@@ -260,7 +271,7 @@ class JAVAFile extends JTextArea{
         try{
             String java_class = JavaFile.getName().replace(".java", "");
             File Parent_Dir = JavaFile.getParentFile();
-            
+
             ProcessBuilder run_class = new ProcessBuilder("java", java_class);
             run_class.directory(Parent_Dir);
             run_class.redirectErrorStream(true);
