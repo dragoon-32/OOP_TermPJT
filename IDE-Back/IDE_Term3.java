@@ -104,7 +104,11 @@ class UI extends JFrame{
             int result = chooser.showOpenDialog(null);
             if(result == JFileChooser.APPROVE_OPTION){
                 File selected = chooser.getSelectedFile();
-                T_edit.addTab(selected.getName(), new JScrollPane(new JAVAFile(selected)));
+                if(selected.exists())
+                    T_edit.addTab(selected.getName(), new JScrollPane(new JAVAFile(selected)));
+                else{
+                    JOptionPane.showMessageDialog(null, "ERROR!!! There is No such File(" + selected.getPath() + ")", "ERROR", JOptionPane.ERROR_MESSAGE);
+                }
             }
         }
     }
@@ -154,7 +158,6 @@ class UI extends JFrame{
             JAVAFile current = (JAVAFile)scroll.getViewport().getView();
 
             current.compile(T_result);
-            current.run(T_result);
         }
     }
     class CompilekeyEvent extends KeyAdapter { // key Listener 함수
